@@ -1,14 +1,12 @@
-use sysinfo::{System};
+use sysinfo::System;
+use num_format::{Locale, ToFormattedString};
 
 fn main() {
-   let mut sys = System::new_all();
-   sys.refresh_all();
-    println!("Total RAM: {} KB", sys.total_memory());
-    println!("Used RAM: {} KB", sys.used_memory());
+    let mut sys = System::new_all();
+    let availible_ram: u64 = sys.total_memory() / 1024 / 1024;
+    let used_ram: u64 = sys.used_memory() / 1024 / 1024;
 
-    // To check the RAM usage of your specific process
-    let pid = sysinfo::get_current_pid().unwrap();
-    if let Some(process) = sys.process(pid) {
-        println!("Memory used by this process: {} KB", process.memory());
-    }
+    sys.refresh_all();
+    println!("Total RAM: {} MB", availible_ram.to_formatted_string(&Locale::en));
+    println!("Used RAM: {} MB", used_ram.to_formatted_string(&Locale::en));
 }
