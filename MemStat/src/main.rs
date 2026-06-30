@@ -27,7 +27,7 @@ fn get_running_apps(sys: &mut System) {
     // Sort the processes by memory usage in descending order
     processes.sort_by(|a, b| b.memory().cmp(&a.memory()));
 
-    println!("{:<10} {:<30} {:<10}", "PID", "Name", "Memory (MB)");
+    println!("{:<10} {:<24} {:<10}", "PID", "Name", "Memory (MB)");
     println!("{:-<55}", "-");
     for process in processes.iter().take(15) {
         let mem_mb: u64 = process.memory() / 1024 / 1024;
@@ -35,7 +35,7 @@ fn get_running_apps(sys: &mut System) {
             "{:<10} {:<30} {:<10}",
             process.pid(),
             process.name().to_string_lossy(),
-            mem_mb
+            mem_mb.to_formatted_string(&Locale::en)
         );
     }
 }
