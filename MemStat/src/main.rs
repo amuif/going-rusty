@@ -1,31 +1,23 @@
 use num_format::{Locale, ToFormattedString};
-use sysinfo::System;
+use sysinfo::{Process, System};
+
+struct MemoryInfo {
+    total_ram: u64,
+    used_ram: u64,
+}
+struct ProcessInfo<'a> {
+    processes: Vec<&'a Process>,
+}
 
 fn main() {
     let mut sys = System::new_all();
-    get_ram_size(&sys);
-    get_running_apps(&mut sys);
-}
-
-fn get_ram_size(sys: &System) {
-    let availible_ram: u64 = sys.total_memory() / 1024 / 1024;
-    let used_ram: u64 = sys.used_memory() / 1024 / 1024;
-
-    println!(
-        "Total RAM: {} MB",
-        availible_ram.to_formatted_string(&Locale::en)
-    );
-    println!("Used RAM: {} MB", used_ram.to_formatted_string(&Locale::en));
-}
-
-fn get_running_apps(sys: &mut System) {
-    // time to calculate
-    std::thread::sleep(std::time::Duration::from_millis(500));
-    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
-    let mut processes: Vec<_> = sys.processes().values().collect();
-
-    // Sort the processes by memory usage in descending order
-    processes.sort_by(|a, b| b.memory().cmp(&a.memory()));
+    let MemoryInfo {
+        total_ram,
+        used_ram,
+    } = get_ram_size(&sys);
+    println!("Total ram:{}, Used ram:{}", total_ram, used_ram);
+    println!("");
+    let ProcessInfo { processes } = get_running_apps(&mut sys);
 
     println!("{:<10} {:<24} {:<10}", "PID", "Name", "Memory (MB)");
     println!("{:-<55}", "-");
@@ -38,4 +30,22 @@ fn get_running_apps(sys: &mut System) {
             mem_mb.to_formatted_string(&Locale::en)
         );
     }
+}
+
+fn get_ram_size(sys: &System) -> MemoryInfo {
+    let total_ram: u64 = sys.total_memory() / 1024 / 1024;
+    let used_ram: u64 = sys.used_memory() / 1024 / 1024;
+    MemoryInfo {
+        total_ram,
+        used_ram,
+    }
+}
+
+fn get_running_apps<'a>(sys: &'a mut System) -> ProcessInfo<'a> {
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+    let mut processes: Vec<_> = sys.processes().values().collect();
+    processes.sort_by(|a, b| b.memory().cmp(&a.memory()));
+    
+    ProcessInfo { processes }
 }
